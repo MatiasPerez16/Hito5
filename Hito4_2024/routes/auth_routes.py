@@ -9,10 +9,10 @@ def registro_usuario():
     try:
         datos_usuario = request.json
         nombre = datos_usuario.get('nombre')
-        contraseña = datos_usuario.get('contraseña')
+        contrasena = datos_usuario.get('contraseña')
         privilegio = datos_usuario.get('privilegio')
 
-        if not nombre or not contraseña or not privilegio:
+        if not nombre or not contrasena or not privilegio:
             raise ValueError("Faltan datos de usuario")
 
         if privilegio_actual != 1:
@@ -25,7 +25,7 @@ def registro_usuario():
         if existe_usuario:
             return jsonify({'error': 'El usuario ya está registrado'}), 400
 
-        cursor.execute("INSERT INTO usuarios (nombre, contraseña, privilegio) VALUES (%s, %s, %s)", (nombre, contraseña, privilegio))
+        cursor.execute("INSERT INTO usuarios (nombre, contraseña, privilegio) VALUES (%s, %s, %s)", (nombre, contrasena, privilegio))
         conn.commit()
         cursor.close()
 
@@ -37,7 +37,7 @@ def registro_usuario():
     except PermissionError as pe:
         return jsonify({'error': str(pe)}), 403
 
-    except Exception as e:
+    except Exception:
         return jsonify({'error': 'Error interno del servidor'}), 500
 
 @auth_bp.route('/inicio_sesion', methods=['POST'])
@@ -45,13 +45,13 @@ def inicio_sesion():
     try:
         datos_usuario = request.json
         nombre = datos_usuario.get('nombre')
-        contraseña = datos_usuario.get('contraseña')
+        contrasena = datos_usuario.get('contraseña')
 
-        if not nombre or not contraseña:
+        if not nombre or not contrasena:
             raise ValueError("Faltan datos de inicio de sesión")
 
         cursor = conn.cursor()
-        cursor.execute("SELECT id, nombre, privilegio FROM usuarios WHERE nombre = %s AND contraseña = %s", (nombre, contraseña))
+        cursor.execute("SELECT id, nombre, privilegio FROM usuarios WHERE nombre = %s AND contraseña = %s", (nombre, contrasena))
         usuario = cursor.fetchone()
 
         if not usuario:
@@ -65,7 +65,7 @@ def inicio_sesion():
     except ValueError as ve:
         return jsonify({'error': str(ve)}), 400
 
-    except Exception as e:
+    except Exception:
         return jsonify({'error': 'Error interno del servidor'}), 500
 
 @auth_bp.route("/obtener_privilegio", methods=["GET"])

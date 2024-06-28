@@ -3,6 +3,9 @@ import base64
 
 event_bp = Blueprint('event', __name__)
 
+# Definir constante
+ERROR_INTERNO_SERVIDOR = 'Error interno del servidor'
+
 @event_bp.route('/crear_evento', methods=['POST'])
 def crear_evento():
     from api import conn
@@ -35,8 +38,8 @@ def crear_evento():
     except ValueError as ve:
         return jsonify({'error': str(ve)}), 400
 
-    except Exception as e:
-        return jsonify({'error': 'Error interno del servidor'}), 500
+    except Exception:
+        return jsonify({'error': ERROR_INTERNO_SERVIDOR}), 500
 
 @event_bp.route('/eventos', methods=['GET'])
 def obtener_eventos():
@@ -85,8 +88,8 @@ def obtener_eventos():
 
         return jsonify(eventos_json), 200
 
-    except Exception as e:
-        return jsonify({'error': 'Error interno del servidor'}), 500
+    except Exception:
+        return jsonify({'error': ERROR_INTERNO_SERVIDOR}), 500
 
 @event_bp.route('/aprobar_evento/<int:evento_id>', methods=['POST'])
 def aprobar_evento(evento_id):
@@ -99,8 +102,8 @@ def aprobar_evento(evento_id):
         cursor.close()
         return jsonify({'message': 'Evento aprobado correctamente.'}), 200
 
-    except Exception as e:
-        return jsonify({'error': 'Error interno del servidor'}), 500
+    except Exception:
+        return jsonify({'error': ERROR_INTERNO_SERVIDOR}), 500
 
 @event_bp.route('/desaprobar_evento/<int:evento_id>', methods=['POST'])
 def desaprobar_evento(evento_id):
@@ -113,5 +116,5 @@ def desaprobar_evento(evento_id):
         cursor.close()
         return jsonify({'message': 'Evento desaprobado correctamente.'}), 200
 
-    except Exception as e:
-        return jsonify({'error': 'Error interno del servidor'}), 500
+    except Exception:
+        return jsonify({'error': ERROR_INTERNO_SERVIDOR}), 500

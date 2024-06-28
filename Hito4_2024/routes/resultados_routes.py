@@ -33,5 +33,5 @@ def guardar_resultados():
             cursor.close()
             return jsonify({'error': 'Error al guardar los resultados.'}), 500
     
-    except Exception as e:
+    except Exception:
         return jsonify({'error': 'Error interno del servidor'}), 500

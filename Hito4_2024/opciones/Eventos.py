@@ -3,72 +3,83 @@ import requests
 from opciones.Utils import descargar_pdf, mostrar_imagen
 import base64
 
-def mostrar_eventos_registrados(BASE_URL):
+# Definir constantes
+SIN_REVISAR = 'Sin revisar'
+APROBADOS = 'Aprobados'
+DESAPROBADOS = 'Desaprobados'
+
+def obtener_filtro_api(estado_filtro):
+    if estado_filtro == SIN_REVISAR:
+        return '1'
+    elif estado_filtro == APROBADOS:
+        return '2'
+    elif estado_filtro == DESAPROBADOS:
+        return '3'
+    return ''
+
+def obtener_estado_aprobacion(aprobacion):
+    if aprobacion == 1:
+        return SIN_REVISAR
+    elif aprobacion == 2:
+        return APROBADOS
+    elif aprobacion == 3:
+        return DESAPROBADOS
+    return 'Desconocido'
+
+def mostrar_info_evento(evento):
+    st.write(f"**{evento['titulo_evento']}**")
+    st.write(f"Descripción: {evento['descripcion_evento'][:100]}...")
+    st.write(f"Vacantes: {evento['vacantes']}")
+    st.write(f"Sesiones: {evento['sesiones']}")
+    st.write(f"Modalidad: {'Presencial' if evento['modalidad'] == 1 else 'Virtual'}")
+    st.write(f"Contenido: {'Sí' if evento['contenido'] else 'No'}")
+
+    if evento['contenido']:
+        descargar_pdf(base64.b64decode(evento['contenido']), f"{evento['titulo_evento']}_contenido")
+    else:
+        st.write("No hay contenido PDF disponible para este evento.")
+                
+    if evento['imagen_evento']:
+        mostrar_imagen(base64.b64decode(evento['imagen_evento']))
+    else:
+        st.write("No hay imagen disponible para este evento.")
+
+    if evento['imagen_tallerista']:
+        mostrar_imagen(base64.b64decode(evento['imagen_tallerista']))
+    else:
+        st.write("No hay imagen del tallerista disponible para este evento.")
+
+    st.write(f"Experiencia Tallerista: {evento['experiencia_tallerista']}")
+    st.write(f"Instagram: {evento['instagram']}")
+    st.write(f"TikTok: {evento['tiktok']}")
+
+def manejar_aprobacion(base_url, evento_id, aprobar):
+    endpoint = 'aprobar_evento' if aprobar else 'desaprobar_evento'
+    response = requests.post(f'{base_url}/{endpoint}/{evento_id}')
+    if response.status_code == 200:
+        st.success(f'Evento {"aprobado" if aprobar else "desaprobado"} correctamente.')
+    else:
+        st.error(f'Error al {"aprobar" if aprobar else "desaprobar"} el evento.')
+
+def mostrar_eventos_registrados(base_url):
     st.header('Eventos Registrados')
     
-    estado_filtro = st.selectbox('Filtrar por estado de aprobación:', ['Todos', 'Sin revisar', 'Aprobados', 'Desaprobados'])
-
-    filtro_api = ''  # Valor de filtro para la API
-
-    if estado_filtro == 'Sin revisar':
-        filtro_api = '1'  # Representa eventos sin revisar
-    elif estado_filtro == 'Aprobados':
-        filtro_api = '2'  # Representa eventos aprobados
-    elif estado_filtro == 'Desaprobados':
-        filtro_api = '3'  # Representa eventos desaprobados
-
-    response = requests.get(f'{BASE_URL}/eventos?aprobacion={filtro_api}')
-
+    estado_filtro = st.selectbox('Filtrar por estado de aprobación:', ['Todos', SIN_REVISAR, APROBADOS, DESAPROBADOS])
+    filtro_api = obtener_filtro_api(estado_filtro)
+    
+    response = requests.get(f'{base_url}/eventos?aprobacion={filtro_api}')
     if response.status_code == 200:
         eventos = response.json()
         for evento in eventos:
-            st.write(f"**{evento['titulo_evento']}**")
-            st.write(f"Descripción: {evento['descripcion_evento'][:100]}...")  # Mostrar solo parte de la descripción
-            st.write(f"Vacantes: {evento['vacantes']}")
-            st.write(f"Sesiones: {evento['sesiones']}")
-            st.write(f"Modalidad: {'Presencial' if evento['modalidad'] == 1 else 'Virtual'}")
-            st.write(f"Contenido: {'Sí' if evento['contenido'] else 'No'}")  # Mostrar si hay contenido o no
-
-            # Mostrar contenido y botón de descarga si existe
-            if evento['contenido']:
-                descargar_pdf(base64.b64decode(evento['contenido']), f"{evento['titulo_evento']}_contenido")
-            else:
-                st.write("No hay contenido PDF disponible para este evento.")
-                    
-            if evento['imagen_evento']:
-                mostrar_imagen(base64.b64decode(evento['imagen_evento']))
-            else:
-                st.write("No hay imagen disponible para este evento.")
-
-            if evento['imagen_tallerista']:
-                mostrar_imagen(base64.b64decode(evento['imagen_tallerista']))
-            else:
-                st.write("No hay imagen del tallerista disponible para este evento.")
-
-            st.write(f"Experiencia Tallerista: {evento['experiencia_tallerista']}")
-            st.write(f"Instagram: {evento['instagram']}")
-            st.write(f"TikTok: {evento['tiktok']}")
-            estado_aprobacion = 'Sin revisar' if evento['aprobacion'] == 1 else 'Aprobado' if evento['aprobacion'] == 2 else 'Desaprobado'
+            mostrar_info_evento(evento)
+            estado_aprobacion = obtener_estado_aprobacion(evento['aprobacion'])
             st.write(f"Aprobación: {estado_aprobacion}")
 
-            # Agregar botones para aprobar y desaprobar
-            if estado_filtro == 'Sin revisar':
+            if estado_filtro == SIN_REVISAR:
                 if st.button(f"Aprobar {evento['titulo_evento']}"):
-                    # Enviar acción de aprobación a la API
-                    response_aprobacion = requests.post(f'{BASE_URL}/aprobar_evento/{evento["id"]}')
-                    if response_aprobacion.status_code == 200:
-                        st.success('Evento aprobado correctamente.')
-                    else:
-                        st.error('Error al aprobar el evento.')
-
+                    manejar_aprobacion(base_url, evento["id"], True)
                 if st.button(f"Desaprobar {evento['titulo_evento']}"):
-                    # Enviar acción de desaprobación a la API
-                    response_desaprobacion = requests.post(f'{BASE_URL}/desaprobar_evento/{evento["id"]}')
-                    if response_desaprobacion.status_code == 200:
-                        st.success('Evento desaprobado correctamente.')
-                    else:
-                        st.error('Error al desaprobar el evento.')
-
+                    manejar_aprobacion(base_url, evento["id"], False)
             st.write('---')
     else:
         st.error('Error al obtener los eventos.')

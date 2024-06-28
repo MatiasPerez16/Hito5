@@ -3,20 +3,21 @@ import requests
 from opciones.Utils import descargar_pdf, mostrar_imagen
 import base64
 
-def mostrar_inicio_sesion(BASE_URL, nombre_login='', contraseña_login=''):
+def mostrar_inicio_sesion(base_url, nombre_login=None, contrasena_login=None):
     nombre_login = st.text_input('Nombre de Usuario', key='nombre_usuario')
-    contraseña_login = st.text_input('Contraseña', type='password', key='contraseña_usuario')
+    contrasena_login = st.text_input('Contraseña', type='password', key='contrasena_usuario')
     if st.button('Iniciar Sesión'):
-        privilegio = iniciar_sesion(BASE_URL, nombre_login, contraseña_login)
+        privilegio = iniciar_sesion(base_url, nombre_login, contrasena_login)
         if privilegio is not None:
             st.success('Inicio de sesión exitoso.')
             return privilegio
         else:
             st.error('Credenciales incorrectas.')
-def iniciar_sesion(BASE_URL, nombre, contraseña):
+
+def iniciar_sesion(base_url, nombre, contrasena):
     try:
-        payload = {'nombre': nombre, 'contraseña': contraseña}
-        response = requests.post(f'{BASE_URL}/inicio_sesion', json=payload)
+        payload = {'nombre': nombre, 'contraseña': contrasena}
+        response = requests.post(f'{base_url}/inicio_sesion', json=payload)
         if response.status_code == 200:
             return response.json().get("privilegio")
         else:
@@ -25,9 +26,9 @@ def iniciar_sesion(BASE_URL, nombre, contraseña):
         st.error(f"Error al iniciar sesión: {e}")
         return None
 
-def obtener_privilegio(BASE_URL):
+def obtener_privilegio(base_url):
     try:
-        response = requests.get(f"{BASE_URL}/obtener_privilegio")
+        response = requests.get(f"{base_url}/obtener_privilegio")
         if response.status_code == 200:
             privilegio = response.json().get("privilegio")
             print("Privilegio obtenido:", privilegio)  # Mensaje de depuración

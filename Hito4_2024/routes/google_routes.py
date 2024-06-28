@@ -18,7 +18,7 @@ def search_tallerista():
         resultados_google_tallerista_cache[descripcion] = [{'title': resultado['title'], 'link': resultado['link']} for resultado in resultados]
         return jsonify({'tabla_tallerista': resultados_google_tallerista_cache[descripcion]}), 200
 
-    except Exception as e:
+    except Exception:
         return jsonify({'error': 'Error interno del servidor'}), 500
 
 @google_bp.route('/buscar_insumos', methods=['POST'])
@@ -36,5 +36,5 @@ def search_insumos():
         resultados_google_insumos_cache[descripcion] = resultados_insumos
         return jsonify({'tabla_insumos': resultados_insumos}), 200
 
-    except Exception as e:
+    except Exception:
         return jsonify({'error': 'Error interno del servidor'}), 500
