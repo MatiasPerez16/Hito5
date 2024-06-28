@@ -11,32 +11,32 @@ def guardar_api_key(base_url, api_key):
 def buscar_descripcion(base_url, descripcion):
     tipo_tallerista, insumos, resultados_google_tallerista, resultados_google_insumos = None, None, None, None
     
-    response = requests.post(f'{base_url}/tipo_tallerista', json={'descripcion': descripcion})
-    if response.status_code == 200:
-        tipo_tallerista = response.json()['tipo_tallerista']
+    # Obtener tipo de tallerista
+    tipo_tallerista = obtener_tipo_tallerista(base_url, descripcion)
+    if tipo_tallerista:
         st.success(f'Tipo de tallerista recomendado: {tipo_tallerista}')
-
-        insumos_response = requests.post(f'{base_url}/insumos', json={'descripcion': descripcion})
-        if insumos_response.status_code == 200:
-            insumos = insumos_response.json()['insumos']
-            st.success(f'Insumos recomendados: {insumos}')
-
-        response_google_tallerista = requests.post(f'{base_url}/buscar_tallerista', json={'descripcion': descripcion})
-        if response_google_tallerista.status_code == 200:
-            resultados_google_tallerista = response_google_tallerista.json().get('tabla_tallerista')
-            st.subheader('Resultados de búsqueda en Google por Tipo de Tallerista')
-            for resultado in resultados_google_tallerista:
-                st.write([resultado['title'], resultado['link']])
-
-        response_google_insumos = requests.post(f'{base_url}/buscar_insumos', json={'descripcion': descripcion})
-        if response_google_insumos.status_code == 200:
-            resultados_google_insumos = response_google_insumos.json().get('tabla_insumos')
-            st.subheader('Resultados de búsqueda en Google por Insumos Recomendados')
-            for insumo, resultados in resultados_google_insumos.items():
-                st.write(f"\nResultados para {insumo} en Chile:")
-                for resultado in resultados:
-                    st.write([resultado['title'][:50], resultado['link']])
-                st.markdown("---")
+    
+    # Obtener insumos recomendados
+    insumos = obtener_insumos(base_url, descripcion)
+    if insumos:
+        st.success(f'Insumos recomendados: {insumos}')
+    
+    # Buscar en Google por tipo de tallerista
+    resultados_google_tallerista = buscar_tallerista_google(base_url, descripcion)
+    if resultados_google_tallerista:
+        st.subheader('Resultados de búsqueda en Google por Tipo de Tallerista')
+        for resultado in resultados_google_tallerista:
+            st.write([resultado['title'], resultado['link']])
+    
+    # Buscar en Google por insumos recomendados
+    resultados_google_insumos = buscar_insumos_google(base_url, descripcion)
+    if resultados_google_insumos:
+        st.subheader('Resultados de búsqueda en Google por Insumos Recomendados')
+        for insumo, resultados in resultados_google_insumos.items():
+            st.write(f"\nResultados para {insumo} en Chile:")
+            for resultado in resultados:
+                st.write([resultado['title'][:50], resultado['link']])
+            st.markdown("---")
     
     return tipo_tallerista, insumos, resultados_google_tallerista, resultados_google_insumos
 
@@ -71,3 +71,39 @@ def mostrar_busqueda_descripcion(base_url):
     # Botón para guardar resultados
     if st.button('Guardar Resultados'):
         guardar_resultados(base_url, descripcion)
+
+def obtener_tipo_tallerista(base_url, descripcion):
+    try:
+        response = requests.post(f'{base_url}/tipo_tallerista', json={'descripcion': descripcion})
+        if response.status_code == 200:
+            return response.json()['tipo_tallerista']
+    except Exception as e:
+        st.error(f"Error al obtener tipo de tallerista: {e}")
+    return None
+
+def obtener_insumos(base_url, descripcion):
+    try:
+        response = requests.post(f'{base_url}/insumos', json={'descripcion': descripcion})
+        if response.status_code == 200:
+            return response.json()['insumos']
+    except Exception as e:
+        st.error(f"Error al obtener insumos: {e}")
+    return None
+
+def buscar_tallerista_google(base_url, descripcion):
+    try:
+        response = requests.post(f'{base_url}/buscar_tallerista', json={'descripcion': descripcion})
+        if response.status_code == 200:
+            return response.json().get('tabla_tallerista')
+    except Exception as e:
+        st.error(f"Error al buscar tallerista en Google: {e}")
+    return None
+
+def buscar_insumos_google(base_url, descripcion):
+    try:
+        response = requests.post(f'{base_url}/buscar_insumos', json={'descripcion': descripcion})
+        if response.status_code == 200:
+            return response.json().get('tabla_insumos')
+    except Exception as e:
+        st.error(f"Error al buscar insumos en Google: {e}")
+    return None

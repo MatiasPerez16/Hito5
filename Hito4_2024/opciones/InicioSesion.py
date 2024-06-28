@@ -4,8 +4,11 @@ from opciones.Utils import descargar_pdf, mostrar_imagen
 import base64
 
 def mostrar_inicio_sesion(base_url, nombre_login=None, contrasena_login=None):
-    nombre_login = st.text_input('Nombre de Usuario', key='nombre_usuario')
-    contrasena_login = st.text_input('Contraseña', type='password', key='contrasena_usuario')
+    if nombre_login is None:
+        nombre_login = st.text_input('Nombre de Usuario', key='nombre_usuario')
+    if contrasena_login is None:
+        contrasena_login = st.text_input('Contraseña', type='password', key='contrasena_usuario')
+    
     if st.button('Iniciar Sesión'):
         privilegio = iniciar_sesion(base_url, nombre_login, contrasena_login)
         if privilegio is not None:
